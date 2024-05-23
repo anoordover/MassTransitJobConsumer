@@ -6,7 +6,7 @@ namespace JobService.Components;
 
 public class ConvertVideoJobConsumer : IJobConsumer<ConvertVideo>
 {
-    readonly ILogger<ConvertVideoJobConsumer> _logger;
+    private readonly ILogger<ConvertVideoJobConsumer> _logger;
 
     public ConvertVideoJobConsumer(ILogger<ConvertVideoJobConsumer> logger)
     {
@@ -15,9 +15,9 @@ public class ConvertVideoJobConsumer : IJobConsumer<ConvertVideo>
 
     public async Task Run(JobContext<ConvertVideo> context)
     {
-        var rng = new Random();
+        Random rng = new Random();
 
-        var variance = TimeSpan.FromMilliseconds(rng.Next(8399, 28377));
+        TimeSpan variance = TimeSpan.FromMilliseconds(rng.Next(8399, 28377));
 
         _logger.LogInformation("Converting Video: {GroupId} {Path}", context.Job.GroupId, context.Job.Path);
 

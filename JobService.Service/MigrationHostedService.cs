@@ -9,8 +9,8 @@ public class MigrationHostedService<TDbContext> :
     IHostedService
     where TDbContext : DbContext
 {
-    readonly ILogger<MigrationHostedService<TDbContext>> _logger;
-    readonly IServiceScopeFactory _scopeFactory;
+    private readonly ILogger<MigrationHostedService<TDbContext>> _logger;
+    private readonly IServiceScopeFactory _scopeFactory;
 
     public MigrationHostedService(IServiceScopeFactory scopeFactory, ILogger<MigrationHostedService<TDbContext>> logger)
     {
@@ -20,16 +20,17 @@ public class MigrationHostedService<TDbContext> :
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        await Retry.Exponential(10, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(5)).Retry(async () =>
-        {
-            _logger.LogInformation("Applying migrations for {DbContext}", TypeCache<TDbContext>.ShortName);
+        await Retry.Exponential(10, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(5)).Retry(
+            async () =>
+            {
+                _logger.LogInformation("Applying migrations for {DbContext}", TypeCache<TDbContext>.ShortName);
 
-            await using var scope = _scopeFactory.CreateAsyncScope();
+                await using AsyncServiceScope scope = _scopeFactory.CreateAsyncScope();
 
-            var context = scope.ServiceProvider.GetRequiredService<TDbContext>();
+                TDbContext context = scope.ServiceProvider.GetRequiredService<TDbContext>();
 
-            await context.Database.MigrateAsync(cancellationToken);
-        }, cancellationToken);
+                await context.Database.MigrateAsync(cancellationToken);
+            }, cancellationToken);
     }
 
     public Task StopAsync(CancellationToken cancellationToken)

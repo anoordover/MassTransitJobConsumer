@@ -1,11 +1,11 @@
 using Projects;
 
-var builder = DistributedApplication.CreateBuilder(args);
+IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder(args);
 
-var postgres = builder.AddPostgres("postgres",
-        builder.CreateResourceBuilder<ParameterResource>(new ParameterResource("username",
+IResourceBuilder<PostgresDatabaseResource> postgres = builder.AddPostgres("postgres",
+        builder.CreateResourceBuilder(new ParameterResource("username",
             _ => "postgres")),
-        builder.CreateResourceBuilder<ParameterResource>(new ParameterResource("password",
+        builder.CreateResourceBuilder(new ParameterResource("password",
             _ => "Password12!")),
         5432)
     .AddDatabase("JobService", "JobService");

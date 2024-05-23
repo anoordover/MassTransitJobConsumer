@@ -9,12 +9,12 @@ using Microsoft.EntityFrameworkCore;
 using Serilog;
 using Serilog.Events;
 
-var builder = WebApplication.CreateBuilder(args);
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();
 
-var optionsEndpoint = builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"];
-var useOtlpExporter = !string.IsNullOrWhiteSpace(optionsEndpoint);
-var logBuilder = new LoggerConfiguration()
+string? optionsEndpoint = builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"];
+bool useOtlpExporter = !string.IsNullOrWhiteSpace(optionsEndpoint);
+LoggerConfiguration logBuilder = new LoggerConfiguration()
     .MinimumLevel.Information()
     .MinimumLevel.Override("MassTransit", LogEventLevel.Debug)
     .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
@@ -27,7 +27,7 @@ if (useOtlpExporter)
 {
     logBuilder.WriteTo.OpenTelemetry(options =>
     {
-        options.Endpoint = builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"]; 
+        options.Endpoint = builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"];
         AddHeaders(options.Headers, builder.Configuration["OTEL_EXPORTER_OTLP_HEADERS"]);
         AddResourceAttributes(options.ResourceAttributes, builder.Configuration["OTEL_RESOURCE_ATTRIBUTES"]);
 
@@ -38,7 +38,7 @@ if (useOtlpExporter)
         {
             if (!string.IsNullOrEmpty(attributeConfig))
             {
-                var parts = attributeConfig.Split('=');
+                string[] parts = attributeConfig.Split('=');
                 if (parts.Length == 2)
                 {
                     attributes[parts[0]] = parts[1];
@@ -54,9 +54,9 @@ if (useOtlpExporter)
         {
             if (!string.IsNullOrEmpty(headerConfig))
             {
-                foreach (var header in headerConfig.Split(','))
+                foreach (string header in headerConfig.Split(','))
                 {
-                    var parts = header.Split('=');
+                    string[] parts = header.Split('=');
                     if (parts.Length == 2)
                     {
                         headers[parts[0]] = parts[1];
@@ -82,7 +82,7 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext<JobServiceSagaDbContext>(optionsBuilder =>
 {
-    var connectionString = builder.Configuration.GetConnectionString("JobService");
+    string? connectionString = builder.Configuration.GetConnectionString("JobService");
     Log.Logger.Information("ConnectionString: {ConnectionString}", connectionString);
 
     optionsBuilder.UseNpgsql(connectionString, m =>
@@ -93,7 +93,7 @@ builder.Services.AddDbContext<JobServiceSagaDbContext>(optionsBuilder =>
 });
 builder.Services.AddHostedService<MigrationHostedService<JobServiceSagaDbContext>>();
 
-var app = builder.Build();
+WebApplication app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -105,4 +105,3 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 await app.RunAsync();
-

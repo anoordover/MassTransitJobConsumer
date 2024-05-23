@@ -4,7 +4,8 @@ namespace JobService.Components;
 
 public class ConvertVideoJobConsumerDefinition : ConsumerDefinition<ConvertVideoJobConsumer>
 {
-    protected override void ConfigureConsumer(IReceiveEndpointConfigurator endpointConfigurator, IConsumerConfigurator<ConvertVideoJobConsumer> consumerConfigurator,
+    protected override void ConfigureConsumer(IReceiveEndpointConfigurator endpointConfigurator,
+        IConsumerConfigurator<ConvertVideoJobConsumer> consumerConfigurator,
         IRegistrationContext context)
     {
         consumerConfigurator.Options<JobOptions<ConvertVideo>>(options => options
