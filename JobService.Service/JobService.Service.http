@@ -1,6 +1,12 @@
 @JobService.Service_HostAddress = http://localhost:5292
 
-GET {{JobService.Service_HostAddress}}/weatherforecast/
+PUT {{JobService.Service_HostAddress}}/ConvertVideo/46657d98-fdb4-418e-9bc0-b777fe2c150e
 Accept: application/json
 
 ###
+GET {{JobService.Service_HostAddress}}/ConvertVideo/22f20000-fcea-b4a9-f98b-08dc7cf69939
+Accept: application/json
+
+###
+GET {{JobService.Service_HostAddress}}/ConvertVideo/a2eb0000-fcea-b4a9-0880-08dc7cf645ac
+Accept: application/json

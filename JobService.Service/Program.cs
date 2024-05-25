@@ -1,7 +1,10 @@
 using System.Reflection;
 
+using JobService.Components;
 using JobService.Service;
+using JobService.Service.Components;
 
+using MassTransit;
 using MassTransit.EntityFrameworkCoreIntegration;
 
 using Microsoft.EntityFrameworkCore;
@@ -80,11 +83,11 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddControllers();
 builder.Services.AddSwaggerGen();
 
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
 builder.Services.AddDbContext<JobServiceSagaDbContext>(optionsBuilder =>
 {
     string? connectionString = builder.Configuration.GetConnectionString("JobService");
-    Log.Logger.Information("ConnectionString: {ConnectionString}", connectionString);
-
     optionsBuilder.UseNpgsql(connectionString, m =>
     {
         m.MigrationsAssembly(Assembly.GetExecutingAssembly().GetName().Name);
@@ -92,6 +95,51 @@ builder.Services.AddDbContext<JobServiceSagaDbContext>(optionsBuilder =>
     });
 });
 builder.Services.AddHostedService<MigrationHostedService<JobServiceSagaDbContext>>();
+
+builder.Services.AddMassTransit(x =>
+{
+    x.AddDelayedMessageScheduler();
+
+    x.AddConsumer<ConvertVideoJobConsumer, ConvertVideoJobConsumerDefinition>()
+        .Endpoint(e => e.Name = "convert-job-queue");
+
+    x.AddConsumer<TrackVideoConvertedConsumer>();
+
+    x.SetJobConsumerOptions();
+    x.AddJobSagaStateMachines(options => options.FinalizeCompleted = false)
+        .EntityFrameworkRepository(r =>
+        {
+            r.ExistingDbContext<JobServiceSagaDbContext>();
+            r.UsePostgres();
+        });
+
+    x.SetKebabCaseEndpointNameFormatter();
+
+    x.UsingRabbitMq((context, cfg) =>
+    {
+        var connectionString = context.GetRequiredService<IConfiguration>()
+            .GetConnectionString("RabbitMq")!;
+        cfg.Host(new Uri(connectionString), _ => {});
+        cfg.UseDelayedMessageScheduler();
+        cfg.ConfigureEndpoints(context);
+    });
+});
+
+builder.Services.AddOptions<MassTransitHostOptions>()
+    .Configure(options =>
+    {
+        options.WaitUntilStarted = true;
+        options.StartTimeout = TimeSpan.FromMinutes(1);
+        options.StopTimeout = TimeSpan.FromMinutes(1);
+    });
+
+builder.Services.AddOptions<HostOptions>()
+    .Configure(options =>
+    {
+        options.ShutdownTimeout = TimeSpan.FromMinutes(2);
+    });
+
+
 
 WebApplication app = builder.Build();
 
@@ -101,7 +149,5 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
-app.UseHttpsRedirection();
-
+app.MapControllers();
 await app.RunAsync();

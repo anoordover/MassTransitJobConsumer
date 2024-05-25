@@ -12,10 +12,15 @@
     <ItemGroup>
         <PackageReference Include="Aspire.Hosting.AppHost" Version="8.0.0-preview.7.24251.11"/>
         <PackageReference Include="Aspire.Hosting.PostgreSQL" Version="8.0.1"/>
+        <PackageReference Include="Aspire.Hosting.RabbitMQ" Version="8.0.1" />
     </ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\JobService.Service\JobService.Service.csproj"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="pgdata\" />
     </ItemGroup>
 
 </Project>
