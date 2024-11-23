@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace JobService.Service.Migrations
 {
     [DbContext(typeof(JobServiceSagaDbContext))]
-    [Migration("20240523215715_InitialMigration")]
+    [Migration("20241123161212_InitialMigration")]
     partial class InitialMigration
     {
         /// <inheritdoc />
@@ -20,7 +20,7 @@ namespace JobService.Service.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.5")
+                .HasAnnotation("ProductVersion", "9.0.0")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -34,7 +34,7 @@ namespace JobService.Service.Migrations
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("Faulted")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("InstanceAddress")
                         .HasColumnType("text");
@@ -49,7 +49,7 @@ namespace JobService.Service.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("Started")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<Guid?>("StatusCheckTokenId")
                         .HasColumnType("uuid");
@@ -71,7 +71,10 @@ namespace JobService.Service.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<DateTime?>("Completed")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("CronExpression")
+                        .HasColumnType("text");
 
                     b.Property<int>("CurrentState")
                         .HasColumnType("integer");
@@ -79,10 +82,19 @@ namespace JobService.Service.Migrations
                     b.Property<TimeSpan?>("Duration")
                         .HasColumnType("interval");
 
-                    b.Property<DateTime?>("Faulted")
+                    b.Property<DateTimeOffset?>("EndDate")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTime?>("Faulted")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("IncompleteAttempts")
+                        .HasColumnType("text");
+
                     b.Property<string>("Job")
+                        .HasColumnType("text");
+
+                    b.Property<string>("JobProperties")
                         .HasColumnType("text");
 
                     b.Property<Guid?>("JobRetryDelayToken")
@@ -91,11 +103,26 @@ namespace JobService.Service.Migrations
                     b.Property<Guid?>("JobSlotWaitToken")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("JobState")
+                        .HasColumnType("text");
+
                     b.Property<TimeSpan?>("JobTimeout")
                         .HasColumnType("interval");
 
                     b.Property<Guid>("JobTypeId")
                         .HasColumnType("uuid");
+
+                    b.Property<long?>("LastProgressLimit")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("LastProgressSequenceNumber")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("LastProgressValue")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTimeOffset?>("NextStartDate")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Reason")
                         .HasColumnType("text");
@@ -106,11 +133,17 @@ namespace JobService.Service.Migrations
                     b.Property<string>("ServiceAddress")
                         .HasColumnType("text");
 
-                    b.Property<DateTime?>("Started")
+                    b.Property<DateTimeOffset?>("StartDate")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTime?>("Started")
+                        .HasColumnType("timestamp without time zone");
+
                     b.Property<DateTime?>("Submitted")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("TimeZoneId")
+                        .HasColumnType("text");
 
                     b.HasKey("CorrelationId");
 
@@ -134,6 +167,9 @@ namespace JobService.Service.Migrations
                     b.Property<int>("CurrentState")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("GlobalConcurrentJobLimit")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Instances")
                         .HasColumnType("text");
 
@@ -144,11 +180,23 @@ namespace JobService.Service.Migrations
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("OverrideLimitExpiration")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("Properties")
+                        .HasColumnType("text");
 
                     b.HasKey("CorrelationId");
 
                     b.ToTable("JobTypeSaga");
+                });
+
+            modelBuilder.Entity("MassTransit.JobAttemptSaga", b =>
+                {
+                    b.HasOne("MassTransit.JobSaga", null)
+                        .WithMany()
+                        .HasForeignKey("JobId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }
