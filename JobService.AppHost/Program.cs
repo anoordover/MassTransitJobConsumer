@@ -20,8 +20,11 @@ var rabbitMq = builder.AddRabbitMQ("RabbitMq",
     .WithEndpoint(15672, 15672, scheme:"http", name: "rmqManagement")
     .WithImage("masstransit/rabbitmq");
 
-builder.AddProject<JobService_Service>("JobServiceService")
+var project = builder.AddProject<JobService_Service>("JobServiceService")
     .WithReference(postgres)
     .WithReference(rabbitMq);
+
+project.WaitFor(postgres)
+    .WaitFor(rabbitMq);
 
 builder.Build().Run();
